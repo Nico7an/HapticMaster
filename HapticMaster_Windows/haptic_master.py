@@ -34,8 +34,8 @@ except ImportError as e:
 class HapticEngine:
     """Gère les patterns haptiques via Logi Options+"""
     
-    # Raccourci clavier configuré dans Logi Options+ : Ctrl+Shift+Alt+U
-    TRIGGER_KEY = 'ctrl+shift+alt+u'
+    # Raccourci clavier configuré dans Logi Options+ : Alt+F12
+    TRIGGER_KEY = 'alt+f12'
     
     PATTERNS = {
         'single': 'Single',
@@ -54,8 +54,14 @@ class HapticEngine:
     def trigger():
         """Déclenche un retour haptique via le raccourci clavier"""
         try:
-            # Envoi rapide direct
-            keyboard.send('ctrl+shift+alt+u')
+            # Envoi avec un léger délai pour assurer la détection par Logi Options+
+            # keyboard.send('alt+f12') # Parfois trop rapide
+            
+            keyboard.press('alt')
+            keyboard.press('f12')
+            time.sleep(0.05) # 50ms de maintien
+            keyboard.release('f12')
+            keyboard.release('alt')
         except Exception as e:
             print(f"Erreur trigger: {e}")
     
@@ -341,7 +347,7 @@ une Smart Action dans Logi Options+ :
 1. Ouvrir Logi Options+
 2. Aller dans Smart Actions → Créer une Smart Action
 3. Déclencheur : Raccourci clavier
-   Ctrl + Shift + Alt + U
+   Alt + F12
 4. Action : Haptic Feedback (Intensité Max)
 
 Cliquez sur "Test Haptic" pour vérifier le fonctionnement.

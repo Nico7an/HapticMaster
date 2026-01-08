@@ -4,7 +4,6 @@ class HapticEngine {
     static let shared = HapticEngine()
     
     // AppleScript command to trigger the shortcut
-    // New: Cmd+Ctrl+Opt+Shift+U (to avoid Finder 'Utilities' conflict)
     private let triggerScript = """
     tell application "System Events"
         key code 32 using {command down, shift down, control down, option down}

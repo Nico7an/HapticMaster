@@ -10,6 +10,6 @@ echo.
 echo Lancement de l'application...
 echo.
 echo IMPORTANT: Configurez d'abord Logi Options+ avec le raccourci:
-echo   Ctrl + Shift + Alt + U  --^>  Haptic Feedback
+echo   Alt + F12  --^>  Haptic Feedback
 echo.
 python haptic_master.py
