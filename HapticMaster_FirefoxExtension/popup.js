@@ -7,7 +7,7 @@ const statusDot = document.querySelector('.dot');
 
 // Check Connection to Native App
 const checkConnection = () => {
-  fetch('http://localhost:3000')
+  fetch('http://localhost:26290')
     .then(res => {
       if (res.ok) {
         connectionStatus.textContent = "Connected";

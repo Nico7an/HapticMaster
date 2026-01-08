@@ -1,6 +1,6 @@
 // Variables to manage cooldown
 let lastTriggerTime = 0;
-const COOLDOWN_MS = 100; // Reduced cooldown for snappier feel
+const COOLDOWN_MS = 50; // Reduced cooldown for snappier feel
 
 // Default settings cache
 let settings = {
@@ -43,7 +43,7 @@ function triggerHaptic(source, pattern) {
     lastTriggerTime = now;
     // Always use Channel 1 for this simplified version
     const channel = 1;
-    console.log(`[MX4] Triggering Channel ${channel} (${pattern}) from ${source}`);
+    //console.log(`[MX4] Triggering Channel ${channel} (${pattern}) from ${source}`);
 
     // Send message to background script
     chrome.runtime.sendMessage({
@@ -75,4 +75,4 @@ document.addEventListener('click', (event) => {
     triggerHaptic("CLICK", settings.clickPattern);
 });
 
-console.log("[MX4] Content script loaded (Multi-Channel Version).");
+//console.log("[MX4] Content script loaded (Multi-Channel Version).");

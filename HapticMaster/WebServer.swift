@@ -5,7 +5,7 @@ import Combine
 class WebServer: ObservableObject {
     static let shared = WebServer()
     private var listener: NWListener?
-    private let port: NWEndpoint.Port = 3000
+    private let port: NWEndpoint.Port = 26290
     
     // UI State
     @Published var status: String = "Initializing..."

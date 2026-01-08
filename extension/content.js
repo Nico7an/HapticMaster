@@ -1,12 +1,13 @@
 // Variables to manage cooldown
 let lastTriggerTime = 0;
-const COOLDOWN_MS = 100; // Reduced cooldown for snappier feel
+const COOLDOWN_MS = 50
 
 // Default settings cache
 let settings = {
     enableExtension: true,
     hoverPattern: "single",
-    clickPattern: "single"
+    clickPattern: "single",
+    cursorPattern: "single"
 };
 
 // Initialize settings
@@ -43,7 +44,6 @@ function triggerHaptic(source, pattern) {
     lastTriggerTime = now;
     // Always use Channel 1 for this simplified version
     const channel = 1;
-    console.log(`[MX4] Triggering Channel ${channel} (${pattern}) from ${source}`);
 
     // Send message to background script
     chrome.runtime.sendMessage({
@@ -54,12 +54,67 @@ function triggerHaptic(source, pattern) {
     });
 }
 
+// Variables variables
+let lastInteractiveElement = null; // Track Hover Heuristic
+let isPointerActive = false;       // Track Cursor Style
+
 // Hover Event Listener
 document.addEventListener('mouseover', (event) => {
     const target = event.target;
 
-    if (target.closest('a') || target.closest('button') || target.closest('[role="button"]')) {
-        triggerHaptic("HOVER", settings.hoverPattern);
+    // --- LOGIQUE 1 : HOVER PATTERN (Sémantique) ---
+    if (settings.hoverPattern && settings.hoverPattern !== 'none') {
+        const element = target.closest('a, button, [role="button"], input[type="submit"], input[type="button"], [onclick], [ng-click], .btn, .button, .clickable');
+
+        if (element) {
+            // Check doublon élément
+            if (element !== lastInteractiveElement) {
+                lastInteractiveElement = element;
+                // Check disabled
+                if (!element.hasAttribute('disabled') && !element.classList.contains('disabled')) {
+                    triggerHaptic("HOVER", settings.hoverPattern);
+                }
+            }
+        } else {
+            // Si on ne survole plus rien de sémantique, on ne reset PAS forcément lastInteractiveElement
+            // car mouseover peut bubbler. Mais si on arrive sur "rien", on reset.
+            // Simplified: mouseout handles deep reset, but here if transition to non-element...
+            // element is null.
+            // On peut reset lastInteractiveElement s'il n'est pas un ancêtre de target ?
+            // target.closest(...) is null means we represent not inside one.
+            lastInteractiveElement = null;
+        }
+    }
+
+    // --- LOGIQUE 2 : CURSOR PATTERN (Visuel) ---
+    if (settings.cursorPattern && settings.cursorPattern !== 'none') {
+        const style = window.getComputedStyle(target);
+        const isPointer = (style.cursor === 'pointer');
+
+        if (isPointer) {
+            if (!isPointerActive) {
+                isPointerActive = true;
+                triggerHaptic("CURSOR", settings.cursorPattern);
+            }
+        } else {
+            isPointerActive = false;
+        }
+    }
+});
+
+// Reset lastInteractiveElement quand la souris quitte la fenêtre ou le document
+document.addEventListener('mouseout', (event) => {
+    // Si on sort de l'élément interactif actuel
+    if (lastInteractiveElement) {
+        // Vérifier si we quitte vraiment l'élément suivi (pas juste vers un enfant)
+        // Mais mouseout buble, donc event.target est l'élément quitté.
+        // Si event.target est ou contient lastInteractiveElement...
+        // Simplification: On reset que si on sort vers "rien" ou un autre élément non interactif.
+        // La logique de mouseover gère le changement d'élément.
+    }
+
+    if (event.relatedTarget === null) {
+        lastInteractiveElement = null;
     }
 });
 
@@ -75,4 +130,4 @@ document.addEventListener('click', (event) => {
     triggerHaptic("CLICK", settings.clickPattern);
 });
 
-console.log("[MX4] Content script loaded (Multi-Channel Version).");
+//console.log("[MX4] Content script loaded (Multi-Channel Version).");

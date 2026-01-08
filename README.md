@@ -1,31 +1,41 @@
 # Haptic Master ⚡️
 
 [![macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
+[![Windows](https://img.shields.io/badge/platform-Windows-blue.svg)](https://www.microsoft.com/windows/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Feel Your Mac.** Immersive Haptic Feedback for Logitech MX Master Users.
+**Feel Your Computer.** Immersive Haptic Feedback for Logitech MX Master Users.
 
 > 🌐 **Website:** [hapticmaster.vercel.app](https://hapticmaster.vercel.app/)
 
 > 🌐 **Contact:** [chamuka.is-a.dev](https://chamuka.is-a.dev)
 
+> 💻 **Windows Version:** [See HapticMaster_Windows folder](HapticMaster_Windows/)
 
-Haptic Master connects your macOS system events (notifications) and web browser interactions directly to your Logitech MX Master mouse's haptic motor. Experience a new layer of immersion with the "Liquid Glass" UI.
+
+Haptic Master connects your system events (notifications) and web browser interactions directly to your Logitech MX Master mouse's haptic motor. Experience a new layer of immersion with haptic feedback on macOS and Windows.
+
+## 🎯 Platform-Specific Versions
+
+- **macOS**: Native Swift app with "Liquid Glass" UI → [See below](#-installation)
+- **Windows**: Python-based app with modern Windows interface → [See Windows README](HapticMaster_Windows/README_WINDOWS.md)
 
 ## ✨ Features
 
-*   **System Haptics**: Feel a heartbeat or pulse when you receive a macOS notification.
+*   **System Haptics**: Feel a heartbeat or pulse when you receive system notifications.
 *   **Web Immersion**: Tactile feedback for clicks and hover effects in your browser.
-*   **Liquid Glass UI**: A modern, native macOS interface with frosted glass aesthetics.
+*   **Native UI**: Liquid Glass on macOS, modern interface on Windows.
 *   **Custom Patterns**: Choose from Pulse, Double, Triple, Heartbeat, and more.
-*   **Privacy First**: Runs 100% locally. No data leaves your Mac.
+*   **Privacy First**: Runs 100% locally. No data leaves your computer.
 *   **Open Source**: Fully transparent code.
 
-## 🛠 Requirements
+## 🛠 Requirements (macOS)
 
 *   **macOS 14.0+** (Sonoma or later).
 *   **Logitech MX Master 3 / 3S / 4** (Supported Mouse).
 *   **Logi Options+** app installed.
+
+> **For Windows requirements**, see [HapticMaster_Windows/README_WINDOWS.md](HapticMaster_Windows/README_WINDOWS.md)
 
 ## 🚀 Installation
 

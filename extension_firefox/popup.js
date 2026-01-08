@@ -2,12 +2,13 @@
 const enableExtension = document.getElementById('enableExtension');
 const hoverPattern = document.getElementById('hoverPattern');
 const clickPattern = document.getElementById('clickPattern');
+const cursorPattern = document.getElementById('cursorPattern'); // Ajout
 const connectionStatus = document.getElementById('connectionStatus');
 const statusDot = document.querySelector('.dot');
 
 // Check Connection to Native App
 const checkConnection = () => {
-  fetch('http://localhost:3000')
+  fetch('http://localhost:26290')
     .then(res => {
       if (res.ok) {
         connectionStatus.textContent = "Connected";
@@ -34,11 +35,13 @@ checkConnection();
 chrome.storage.local.get({
   enableExtension: true,
   hoverPattern: "single",
-  clickPattern: "single"
+  clickPattern: "single",
+  cursorPattern: "single" // New setting
 }, (items) => {
   enableExtension.checked = items.enableExtension;
   hoverPattern.value = items.hoverPattern;
   clickPattern.value = items.clickPattern;
+  cursorPattern.value = items.cursorPattern;
 });
 
 // Save settings when changed
@@ -46,13 +49,15 @@ const saveSettings = () => {
   chrome.storage.local.set({
     enableExtension: enableExtension.checked,
     hoverPattern: hoverPattern.value,
-    clickPattern: clickPattern.value
+    clickPattern: clickPattern.value,
+    cursorPattern: cursorPattern.value
   });
 };
 
 enableExtension.addEventListener('change', saveSettings);
 hoverPattern.addEventListener('change', saveSettings);
 clickPattern.addEventListener('change', saveSettings);
+cursorPattern.addEventListener('change', saveSettings);
 
 // Test Buttons Logic
 document.getElementById('testHover').addEventListener('click', () => {
@@ -68,6 +73,17 @@ document.getElementById('testHover').addEventListener('click', () => {
 
 document.getElementById('testClick').addEventListener('click', () => {
   const pattern = clickPattern.value;
+  if (pattern === 'none') return;
+
+  chrome.runtime.sendMessage({
+    type: "TRIGGER_HAPTIC",
+    channel: 1,
+    pattern: pattern
+  });
+});
+
+document.getElementById('testCursor').addEventListener('click', () => {
+  const pattern = cursorPattern.value;
   if (pattern === 'none') return;
 
   chrome.runtime.sendMessage({

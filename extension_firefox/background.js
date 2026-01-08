@@ -4,7 +4,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "TRIGGER_HAPTIC") {
         // console.log("Forwarding haptic trigger", message);
 
-        fetch('http://localhost:3000/haptic', {
+        fetch('http://localhost:26290/haptic', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
