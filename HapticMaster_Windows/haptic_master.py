@@ -11,6 +11,7 @@ import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import time
 from datetime import datetime
+import os
 
 # Vérification des dépendances
 try:
@@ -31,11 +32,48 @@ except ImportError as e:
     sys.exit(1)
 
 
+class ConfigManager:
+    """Gère la configuration de l'application"""
+    
+    CONFIG_FILE = 'config.json'
+    DEFAULT_CONFIG = {
+        'trigger_key': 'alt+k',
+        'system_notifications_enabled': True,
+        'notification_pattern': 'pulse',
+        'allow_web_haptics': True
+    }
+    
+    @staticmethod
+    def load_config():
+        """Charge la configuration depuis le fichier JSON"""
+        try:
+            if os.path.exists(ConfigManager.CONFIG_FILE):
+                with open(ConfigManager.CONFIG_FILE, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                    # Fusionner avec les valeurs par défaut pour les nouvelles clés
+                    return {**ConfigManager.DEFAULT_CONFIG, **config}
+            return ConfigManager.DEFAULT_CONFIG.copy()
+        except Exception as e:
+            print(f"Erreur chargement config: {e}")
+            return ConfigManager.DEFAULT_CONFIG.copy()
+    
+    @staticmethod
+    def save_config(config):
+        """Sauvegarde la configuration dans le fichier JSON"""
+        try:
+            with open(ConfigManager.CONFIG_FILE, 'w', encoding='utf-8') as f:
+                json.dump(config, f, indent=2, ensure_ascii=False)
+            return True
+        except Exception as e:
+            print(f"Erreur sauvegarde config: {e}")
+            return False
+
+
 class HapticEngine:
     """Gère les patterns haptiques via Logi Options+"""
     
-    # Raccourci clavier configuré dans Logi Options+ : Alt+F12
-    TRIGGER_KEY = 'alt+f12'
+    # Raccourci clavier configurable
+    trigger_key = 'alt+k'
     
     PATTERNS = {
         'single': 'Single',
@@ -50,18 +88,17 @@ class HapticEngine:
         'gallop': 'Gallop'
     }
     
-    @staticmethod
-    def trigger():
+    @classmethod
+    def set_trigger_key(cls, key: str):
+        """Modifie le raccourci clavier utilisé"""
+        cls.trigger_key = key.lower()
+    
+    @classmethod
+    def trigger(cls):
         """Déclenche un retour haptique via le raccourci clavier"""
         try:
             # Envoi avec un léger délai pour assurer la détection par Logi Options+
-            # keyboard.send('alt+f12') # Parfois trop rapide
-            
-            keyboard.press('alt')
-            keyboard.press('f12')
-            time.sleep(0.05) # 50ms de maintien
-            keyboard.release('f12')
-            keyboard.release('alt')
+            keyboard.press(cls.trigger_key)
         except Exception as e:
             print(f"Erreur trigger: {e}")
     
@@ -235,13 +272,20 @@ class HapticMasterApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Haptic Master")
-        self.root.geometry("340x480")
+        self.root.geometry("340x550")
         self.root.resizable(False, False)
         
+        # Charger la configuration
+        self.config = ConfigManager.load_config()
+        
         # Configuration
-        self.system_notifications_enabled = tk.BooleanVar(value=True)
-        self.notification_pattern = tk.StringVar(value='pulse')
-        self.allow_web_haptics = tk.BooleanVar(value=True)
+        self.system_notifications_enabled = tk.BooleanVar(value=self.config['system_notifications_enabled'])
+        self.notification_pattern = tk.StringVar(value=self.config['notification_pattern'])
+        self.allow_web_haptics = tk.BooleanVar(value=self.config['allow_web_haptics'])
+        self.trigger_key = tk.StringVar(value=self.config['trigger_key'])
+        
+        # Initialiser HapticEngine avec le raccourci configuré
+        HapticEngine.set_trigger_key(self.config['trigger_key'])
         
         # État du serveur
         self.server_status = tk.StringVar(value="Initializing...")
@@ -339,7 +383,8 @@ class HapticMasterApp:
     
     def _show_setup_help(self):
         """Affiche les instructions de configuration"""
-        msg = """IMPORTANT : Configuration Logi Options+
+        current_key = self.trigger_key.get().upper()
+        msg = f"""IMPORTANT : Configuration Logi Options+
 
 Pour que les haptiques fonctionnent, vous devez configurer
 une Smart Action dans Logi Options+ :
@@ -347,14 +392,24 @@ une Smart Action dans Logi Options+ :
 1. Ouvrir Logi Options+
 2. Aller dans Smart Actions → Créer une Smart Action
 3. Déclencheur : Raccourci clavier
-   Alt + F12
+   {current_key}
 4. Action : Haptic Feedback (Intensité Max)
+
+Vous pouvez modifier le raccourci dans la section "Keyboard Shortcut".
 
 Cliquez sur "Test Haptic" pour vérifier le fonctionnement.
 Si ça ne vibre pas, vérifiez votre configuration."""
         
         # Afficher le message directement (accessible via menu Aide)
         messagebox.showinfo("Configuration Logi Options+", msg, parent=self.root)
+    
+    def _save_config(self):
+        """Sauvegarde la configuration actuelle"""
+        self.config['system_notifications_enabled'] = self.system_notifications_enabled.get()
+        self.config['notification_pattern'] = self.notification_pattern.get()
+        self.config['allow_web_haptics'] = self.allow_web_haptics.get()
+        self.config['trigger_key'] = self.trigger_key.get()
+        ConfigManager.save_config(self.config)
     
     
     def _create_ui(self):
@@ -372,11 +427,11 @@ Si ça ne vibre pas, vérifiez votre configuration."""
         header = ttk.Frame(main_frame)
         header.pack(fill=tk.X, pady=(0, 20))
         
-        ttk.Label(header, text="🖱 Haptic Master", 
+        ttk.Label(header, text="Haptic Master", 
                  font=('Segoe UI', 16, 'bold')).pack(anchor=tk.W)
         
         # Section 1: System Notifications
-        notif_frame = ttk.LabelFrame(main_frame, text="  🔔 System Notifications  ", padding="10")
+        notif_frame = ttk.LabelFrame(main_frame, text="System Notifications", padding="10")
         notif_frame.pack(fill=tk.X, pady=(0, 15))
         
         toggle_frame = ttk.Frame(notif_frame)
@@ -408,6 +463,58 @@ Si ça ne vibre pas, vérifiez votre configuration."""
                     break
         
         pattern_combo.bind('<<ComboboxSelected>>', on_pattern_change)
+        
+        # Section 1.5: Keyboard Shortcut
+        shortcut_frame = ttk.LabelFrame(main_frame, text="Keyboard Shortcut", padding="10")
+        shortcut_frame.pack(fill=tk.X, pady=(0, 15))
+        
+        info_label = ttk.Label(shortcut_frame, 
+                              text="Configure in Logi Options+ with this shortcut:",
+                              font=('Segoe UI', 8),
+                              foreground='gray')
+        info_label.pack(anchor=tk.W, pady=(0, 5))
+        
+        shortcut_input_frame = ttk.Frame(shortcut_frame)
+        shortcut_input_frame.pack(fill=tk.X, pady=(5, 0))
+        
+        ttk.Label(shortcut_input_frame, text="Shortcut:").pack(side=tk.LEFT)
+        
+        shortcut_entry = ttk.Entry(shortcut_input_frame, 
+                                   textvariable=self.trigger_key,
+                                   width=15)
+        shortcut_entry.pack(side=tk.LEFT, padx=(5, 5))
+        
+        def save_shortcut():
+            """Sauvegarde le nouveau raccourci"""
+            new_key = self.trigger_key.get().strip().lower()
+            
+            # Validation basique
+            if not new_key or len(new_key) < 2:
+                messagebox.showerror("Erreur", 
+                                   "Le raccourci doit contenir au moins 2 caractères.",
+                                   parent=self.root)
+                return
+            
+            # Vérifier le format (doit contenir au moins un '+')
+            if '+' not in new_key:
+                messagebox.showwarning("Format invalide", 
+                                     "Le raccourci doit être au format 'alt+k', 'ctrl+f12', etc.",
+                                     parent=self.root)
+                return
+            
+            # Mettre à jour HapticEngine
+            HapticEngine.set_trigger_key(new_key)
+            
+            # Sauvegarder la configuration
+            self.config['trigger_key'] = new_key
+            self._save_config()
+            
+            messagebox.showinfo("Succès", 
+                              f"Raccourci mis à jour: {new_key.upper()}\n\nN'oubliez pas de configurer Logi Options+ avec ce raccourci.",
+                              parent=self.root)
+        
+        save_btn = ttk.Button(shortcut_input_frame, text="Save", command=save_shortcut)
+        save_btn.pack(side=tk.LEFT)
         
         # Section 2: Web Browser
         web_frame = ttk.LabelFrame(main_frame, text="  🌐 Web Browser  ", padding="10")
